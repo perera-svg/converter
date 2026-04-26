@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { ChangeEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { dispatch } from "../_lib/converters/index";
 import type { Format } from "../_lib/formats";
 import { pairHref, SAMPLE_INPUT } from "../_lib/formats";
@@ -27,23 +27,24 @@ export function Converter({ from, to }: { from: Format; to: Format }) {
       setConvTime(null);
       return;
     }
-    const t0 =
-      typeof performance !== "undefined" ? performance.now() : Date.now();
     try {
+      const t0 =
+        typeof performance !== "undefined" ? performance.now() : Date.now();
       const indentVal = indent === "tab" ? "\t" : Number(indent);
       const result = dispatch(from, to, val, { indent: indentVal });
       setOutput(result);
       setStatus({ ok: true, msg: `✓ Valid ${from}` });
+      const t1 =
+        typeof performance !== "undefined" ? performance.now() : Date.now();
+      setConvTime((t1 - t0).toFixed(1));
     } catch (e) {
       setOutput("");
+      setConvTime(null);
       setStatus({
         ok: false,
         msg: `✗ ${e instanceof Error ? e.message.split("\n")[0] : "parse error"}`,
       });
     }
-    const t1 =
-      typeof performance !== "undefined" ? performance.now() : Date.now();
-    setConvTime((t1 - t0).toFixed(1));
   };
 
   const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -80,6 +81,11 @@ export function Converter({ from, to }: { from: Format; to: Format }) {
     a.click();
     URL.revokeObjectURL(a.href);
   };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
+  useEffect(() => {
+    if (input.trim()) convert(input);
+  }, [indent]);
 
   const bytes = new TextEncoder().encode(input).length;
   const lines = input ? input.split("\n").length : 0;
