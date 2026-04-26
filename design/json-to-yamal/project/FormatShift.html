@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FormatShift — Format Converter</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+      }
+    }
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>
+  :root {
+    --bg: #f8f8f7; --bg-sub: #f0f0ef; --bg-card: #ffffff;
+    --border: #e2e2e0; --border-subtle: #ebebea;
+    --text: #0b0b0d; --text-muted: #7a7a85; --text-faint: #b0b0bb;
+    --accent: #4F7BF5; --accent-dim: rgba(79,123,245,0.12);
+    --code-bg: #f3f3f2; --code-border: #e2e2e0;
+  }
+  .dark {
+    --bg: #0b0b0d; --bg-sub: #111114; --bg-card: #141416;
+    --border: #222226; --border-subtle: #1a1a1e;
+    --text: #f0f0f2; --text-muted: #7a7a85; --text-faint: #3a3a42;
+    --accent: #4F7BF5; --accent-dim: rgba(79,123,245,0.14);
+    --code-bg: #0f0f12; --code-border: #1e1e24;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; transition: background 0.2s, color 0.2s; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; }
+  .card-hover { transition: border-color 0.15s, background 0.15s; cursor: pointer; }
+  .card-hover:hover { border-color: var(--accent); background: var(--accent-dim); }
+  
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { color: var(--text); border-color: var(--text-faint); }
+  .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-accent:hover { opacity: 0.88; color: #fff; }
+  
+  .code-pane { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .code-textarea { flex: 1; resize: none; outline: none; border: none; background: transparent; color: var(--text); padding: 14px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; min-height: 0; }
+  .code-textarea::placeholder { color: var(--text-faint); }
+  
+  .pane-toolbar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--code-border); background: var(--bg-card); flex-shrink: 0; }
+  .pane-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-right: auto; }
+
+  .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .tag-json { background: rgba(234,179,8,0.12); color: #ca8a04; }
+  .dark .tag-json { color: #eab308; }
+  .tag-yaml { background: rgba(79,123,245,0.12); color: #4F7BF5; }
+  .tag-toml { background: rgba(239,68,68,0.1); color: #dc2626; }
+  .dark .tag-toml { color: #f87171; }
+  .tag-xml { background: rgba(168,85,247,0.1); color: #9333ea; }
+  .dark .tag-xml { color: #c084fc; }
+  .tag-csv { background: rgba(16,185,129,0.1); color: #059669; }
+  .dark .tag-csv { color: #34d399; }
+  .tag-ini { background: rgba(251,146,60,0.1); color: #ea580c; }
+  .dark .tag-ini { color: #fb923c; }
+
+  .status-strip { display: flex; align-items: center; gap: 16px; padding: 6px 16px; background: var(--bg-card); border-top: 1px solid var(--code-border); font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+  .status-ok { color: #22c55e; font-weight: 600; }
+
+  .sep { width: 1px; height: 12px; background: var(--border); }
+
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 16px 0; background: none; border: none; cursor: pointer; color: var(--text); font-size: 14px; font-weight: 500; text-align: left; }
+  .faq-body { padding-bottom: 16px; font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+
+  .view-toggle { display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-sub); font-size: 12px; color: var(--text-muted); }
+  .view-btn { padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; border: none; background: none; color: var(--text-muted); transition: all 0.12s; }
+  .view-btn.active { background: var(--accent); color: #fff; }
+
+  .search-input { width: 100%; padding: 10px 14px 10px 38px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text); font-size: 14px; outline: none; transition: border-color 0.15s; }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text-faint); }
+
+  .nav-link { font-size: 13px; color: var(--text-muted); text-decoration: none; padding: 4px 8px; border-radius: 5px; transition: color 0.12s; cursor: pointer; background: none; border: none; }
+  .nav-link:hover { color: var(--text); }
+
+  .section-head { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 10px; }
+
+  .ad-slot { border: 1px dashed var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; background: var(--bg-sub); }
+  .ad-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
+
+  .trust-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); font-size: 12px; color: var(--text-muted); }
+
+  table { border-collapse: collapse; width: 100%; }
+  th { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { color: var(--text); font-weight: 500; }
+
+  a { color: inherit; text-decoration: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef, useEffect, useMemo } = React;
+// ── Inline SVG Icons ──────────────────────────────────────────────────────────
+const ICON_PATHS = {
+  Search: 'M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0',
+  Sun: 'M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42M12 5a7 7 0 1 0 0 14A7 7 0 0 0 12 5z',
+  Moon: 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z',
+  Github: 'M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22',
+  ArrowRight: 'M5 12h14M12 5l7 7-7 7',
+  ArrowLeftRight: 'M21 12H3M3 12l4-4M3 12l4 4M21 12l-4-4M21 12l-4 4',
+  ChevronRight: 'M9 18l6-6-6-6',
+  ChevronDown: 'M6 9l6 6 6-6',
+  ChevronUp: 'M18 15l-6-6-6 6',
+  Copy: 'M8 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3M11 21h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z',
+  Download: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',
+  Upload: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
+  X: 'M18 6L6 18M6 6l12 12',
+  Check: 'M20 6L9 17l-5-5',
+  FileText: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8',
+  Zap: 'M13 2L3 14h9l-1 8 10-12h-9l1-8',
+  Shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+  ClipboardPaste: 'M9 2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M9 2h6v4H9zM9 2V6M13 12v6M10 15l3 3 3-3',
+  RefreshCw: 'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
+  Server: 'M2 3h20v6H2zM2 15h20v6H2zM6 9v0M6 21v0',
+  GitBranch: 'M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9',
+  Terminal: 'M4 17L10 11 4 5M12 19h8',
+};
+
+function Icon({name, size=16, style}) {
+  const d = ICON_PATHS[name];
+  if (!d) return null;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+      style={{display:'inline-block',flexShrink:0,...style}}>
+      <path d={d}/>
+    </svg>
+  );
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+const FORMATS = ['JSON','YAML','TOML','XML','CSV','INI'];
+const POPULAR = [
+  {from:'JSON',to:'YAML'},{from:'YAML',to:'JSON'},
+  {from:'JSON',to:'TOML'},{from:'XML',to:'JSON'},
+];
+const ALL_PAIRS = FORMATS.flatMap(f => FORMATS.filter(t=>t!==f).map(t=>({from:f,to:t})));
+
+const SAMPLE_INPUT = `{
+  "name": "my-app",
+  "version": "1.0.0",
+  "config": {
+    "debug": true,
+    "port": 3000,
+    "database": {
+      "host": "localhost",
+      "name": "appdb"
+    },
+    "tags": ["web", "api", "oss"]
+  }
+}`;
+
+const SAMPLE_OUTPUT = `name: my-app
+version: 1.0.0
+config:
+  debug: true
+  port: 3000
+  database:
+    host: localhost
+    name: appdb
+  tags:
+    - web
+    - api
+    - oss`;
+
+const FAQ_ITEMS = [
+  {q:"Is my data safe?", a:"Completely. All conversion happens in your browser using JavaScript — no data is ever sent to our servers. You can even use this tool offline after the page has loaded."},
+  {q:"What's the maximum file size I can convert?", a:"There's no hard limit imposed by our tool. Performance depends on your browser and device, but files up to 10 MB typically convert in under a second. Very large files may be slow."},
+  {q:"Does this work offline?", a:"Yes. Once the page is loaded, the conversion engine runs entirely client-side. You can disconnect from the internet and continue converting files without any issues."},
+  {q:"Are there any YAML features that don't map to JSON?", a:"Yes — YAML supports comments, multi-line strings, anchors and aliases, and custom tags. These features don't have JSON equivalents. Our converter preserves data but strips comments and resolves anchors."},
+  {q:"Why does my JSON fail to convert?", a:"The most common cause is invalid JSON syntax — trailing commas, unquoted keys, or single quotes instead of double quotes. The status strip below the editor will show the exact error and line number."},
+  {q:"Can I convert multiple files at once?", a:"Batch conversion isn't supported in the free online tool, but our CLI (coming soon) will support piping and directory conversion. Subscribe to our newsletter to be notified."},
+];
+
+const USE_CASES = [
+  {title:"Kubernetes configs",desc:"K8s manifests, Helm charts, and kustomize overlays all use YAML natively. Convert JSON configs from CI pipelines in one click.",icon:"Server"},
+  {title:"CI/CD pipelines",desc:"GitHub Actions, GitLab CI, and CircleCI all use YAML workflow definitions. Convert your JSON config exports seamlessly.",icon:"GitBranch"},
+  {title:"Ansible playbooks",desc:"Ansible's YAML DSL for infrastructure automation. Migrate JSON variable files and inventory exports to valid playbook format.",icon:"Terminal"},
+  {title:"Config migration",desc:"Moving between frameworks often means converting .json to .yaml or .toml. Handle entire config directories format-by-format.",icon:"RefreshCw"},
+];
+
+const COMPARE_ROWS = [
+  {feature:"Syntax",json:"Curly braces, square brackets, quoted strings",yaml:"Indentation-based, minimal punctuation"},
+  {feature:"Comments",json:"Not supported",yaml:"Supported with # character"},
+  {feature:"Data types",json:"String, number, boolean, array, object, null",yaml:"Same + timestamps, binary, anchors & aliases"},
+  {feature:"Readability",json:"Moderate — verbose for humans",yaml:"High — designed for human readability"},
+  {feature:"Spec strictness",json:"Strict — errors on trailing commas",yaml:"Lenient — multiple valid representations"},
+  {feature:"Common uses",json:"REST APIs, package.json, config files",yaml:"Kubernetes, CI/CD, Ansible, Docker Compose"},
+];
+
+
+function FmtTag({fmt}) {
+  return <span className={`tag tag-${fmt.toLowerCase()}`}>{fmt}</span>;
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+function Nav({dark, setDark, onNav}) {
+  return (
+    <nav style={{background:'var(--bg)',borderBottom:'1px solid var(--border)',position:'sticky',top:0,zIndex:40}}>
+      <div style={{maxWidth:1100,margin:'0 auto',display:'flex',alignItems:'center',gap:8,padding:'0 20px',height:52}}>
+        <button onClick={()=>onNav('hub')} style={{display:'flex',alignItems:'center',gap:7,background:'none',border:'none',cursor:'pointer',padding:0}}>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="2" y="2" width="8" height="8" rx="2" fill="var(--accent)"/>
+            <rect x="12" y="2" width="8" height="8" rx="2" fill="var(--accent)" opacity="0.4"/>
+            <rect x="2" y="12" width="8" height="8" rx="2" fill="var(--accent)" opacity="0.4"/>
+            <rect x="12" y="12" width="8" height="8" rx="2" fill="var(--accent)" opacity="0.6"/>
+          </svg>
+          <span style={{fontWeight:600,fontSize:15,color:'var(--text)',letterSpacing:'-0.01em'}}>FormatShift</span>
+        </button>
+        <div style={{flex:1}}/>
+        <button className="nav-link" onClick={()=>onNav('hub')}>All Tools</button>
+        <button className="nav-link" style={{display:'flex',alignItems:'center',gap:4}}>
+          <Icon name="Github" size={15}/> GitHub
+        </button>
+        <div className="sep"/>
+        <button className="btn" style={{padding:'5px 8px'}} onClick={()=>setDark(!dark)}>
+          {dark ? <Icon name="Sun" size={15}/> : <Icon name="Moon" size={15}/>}
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer style={{borderTop:'1px solid var(--border)',background:'var(--bg-sub)',padding:'32px 20px',marginTop:64}}>
+      <div style={{maxWidth:1100,margin:'0 auto',display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:16}}>
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+            <rect x="2" y="2" width="8" height="8" rx="2" fill="var(--accent)"/>
+            <rect x="12" y="2" width="8" height="8" rx="2" fill="var(--accent)" opacity="0.4"/>
+            <rect x="2" y="12" width="8" height="8" rx="2" fill="var(--accent)" opacity="0.4"/>
+            <rect x="12" y="12" width="8" height="8" rx="2" fill="var(--accent)" opacity="0.6"/>
+          </svg>
+          <span style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>FormatShift</span>
+          <span style={{fontSize:12,color:'var(--text-faint)',marginLeft:8}}>© 2026</span>
+        </div>
+        <div style={{display:'flex',gap:20,flexWrap:'wrap'}}>
+          {['About','Privacy','Terms','Contact','GitHub'].map(l=>(
+            <a key={l} className="nav-link" style={{padding:'0 4px',fontSize:13}}>{l}</a>
+          ))}
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ── Converter Card ────────────────────────────────────────────────────────────
+function ConverterCard({from, to, onClick, small}) {
+  return (
+    <div className="card card-hover" onClick={onClick}
+      style={{padding: small?'10px 14px':'12px 16px', display:'flex', alignItems:'center', gap:8}}>
+      <FmtTag fmt={from}/>
+      <Icon name="ArrowRight" size={13} style={{color:'var(--text-faint)',flexShrink:0}}/>
+      <FmtTag fmt={to}/>
+      {!small && <Icon name="ChevronRight" size={13} style={{color:'var(--text-faint)',marginLeft:'auto'}}/>}
+    </div>
+  );
+}
+
+// ── Hub Page ──────────────────────────────────────────────────────────────────
+function HubPage({onNav}) {
+  const [search, setSearch] = useState('');
+  const filtered = useMemo(()=>{
+    const q = search.toLowerCase();
+    return ALL_PAIRS.filter(p=>
+      !q || p.from.toLowerCase().includes(q) || p.to.toLowerCase().includes(q) ||
+      `${p.from} to ${p.to}`.toLowerCase().includes(q)
+    );
+  },[search]);
+
+  const grouped = useMemo(()=>{
+    return FORMATS.map(f=>({
+      format: f,
+      pairs: filtered.filter(p=>p.from===f)
+    })).filter(g=>g.pairs.length>0);
+  },[filtered]);
+
+  return (
+    <div style={{minHeight:'100vh'}}>
+      {/* Hero */}
+      <div style={{maxWidth:1100,margin:'0 auto',padding:'72px 20px 56px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:20}}>
+          <span style={{fontSize:11,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--accent)'}}>Developer Tools</span>
+        </div>
+        <h1 style={{fontSize:'clamp(28px,4vw,44px)',fontWeight:600,letterSpacing:'-0.025em',lineHeight:1.15,margin:'0 0 16px',color:'var(--text)'}}>
+          Convert between JSON, YAML,<br/>TOML, XML, CSV and INI.
+        </h1>
+        <p style={{fontSize:16,color:'var(--text-muted)',margin:'0 0 40px',maxWidth:540,lineHeight:1.6}}>
+          Fast, free, and runs entirely in your browser. No uploads, no servers, no accounts.
+        </p>
+        {/* Search */}
+        <div style={{position:'relative',maxWidth:440}}>
+          <Icon name="Search" size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text-faint)'}}/>
+          <input className="search-input" placeholder="Search converters — e.g. JSON to YAML" value={search} onChange={e=>setSearch(e.target.value)}/>
+        </div>
+      </div>
+
+      <div style={{maxWidth:1100,margin:'0 auto',padding:'0 20px 80px'}}>
+        {/* Popular */}
+        {!search && (
+          <div style={{marginBottom:48}}>
+            <div className="section-head">Popular</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:8}}>
+              {POPULAR.map(p=>(
+                <ConverterCard key={`${p.from}-${p.to}`} {...p} onClick={()=>onNav('converter',p)}/>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Grid by format */}
+        {grouped.length===0 ? (
+          <div style={{padding:'48px 0',textAlign:'center',color:'var(--text-muted)',fontSize:14}}>No converters match "{search}"</div>
+        ) : grouped.map(g=>(
+          <div key={g.format} style={{marginBottom:40}}>
+            <div className="section-head">{g.format} →</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(190px,1fr))',gap:8}}>
+              {g.pairs.map(p=>(
+                <ConverterCard key={`${p.from}-${p.to}`} {...p} onClick={()=>onNav('converter',p)}/>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Code Pane ─────────────────────────────────────────────────────────────────
+function CodePane({label, value, onChange, placeholder, readOnly, children}) {
+  const taRef = useRef(null);
+  const lnRef = useRef(null);
+  const lines = (value||'').split('\n');
+  const count = Math.max(lines.length, 1);
+
+  return (
+    <div className="code-pane" style={{flex:1,minHeight:0,display:'flex',flexDirection:'column'}}>
+      <div className="pane-toolbar">
+        <span className="pane-label">{label}</span>
+        {children}
+      </div>
+      <div style={{display:'flex',flex:1,minHeight:0,overflow:'hidden'}}>
+        {/* Line numbers */}
+        <div ref={lnRef} style={{
+          minWidth:42,width:42,overflowY:'hidden',paddingTop:14,paddingBottom:14,
+          textAlign:'right',paddingRight:10,paddingLeft:8,
+          background:'var(--bg-card)',borderRight:'1px solid var(--code-border)',
+          fontFamily:'"JetBrains Mono",monospace',fontSize:12,lineHeight:'1.65',
+          color:'var(--text-faint)',userSelect:'none',flexShrink:0
+        }}>
+          {Array.from({length:count},(_,i)=><div key={i}>{i+1}</div>)}
+        </div>
+        <textarea
+          ref={taRef}
+          className="code-textarea"
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          spellCheck={false}
+          onScroll={e=>{if(lnRef.current)lnRef.current.scrollTop=e.target.scrollTop;}}
+          style={{flex:1,minHeight:0}}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Converter Page ────────────────────────────────────────────────────────────
+function ConverterPage({from='JSON', to='YAML', onNav}) {
+  const [input, setInput] = useState('');
+  const [output, setOutput] = useState('');
+  const [srcFmt, setSrcFmt] = useState(from);
+  const [dstFmt, setDstFmt] = useState(to);
+  const [copied, setCopied] = useState(false);
+  const [indent, setIndent] = useState('2');
+  const [status, setStatus] = useState(null);
+  const [convTime, setConvTime] = useState(null);
+  const [openFaq, setOpenFaq] = useState(null);
+
+  const convert = (val) => {
+    if (!val.trim()) { setOutput(''); setStatus(null); return; }
+    const t0 = performance.now();
+    // Mock conversion
+    try {
+      JSON.parse(val); // validate if JSON
+      setOutput(SAMPLE_OUTPUT);
+      setStatus({ok:true, msg:`✓ Valid ${srcFmt}`});
+    } catch(e) {
+      if (srcFmt !== 'JSON') {
+        setOutput(SAMPLE_OUTPUT);
+        setStatus({ok:true, msg:`✓ Valid ${srcFmt}`});
+      } else {
+        setOutput('');
+        setStatus({ok:false, msg:`✗ Invalid JSON: ${e.message.split('\n')[0]}`});
+      }
+    }
+    setConvTime((performance.now()-t0).toFixed(1));
+  };
+
+  const handleInput = (e) => { setInput(e.target.value); convert(e.target.value); };
+  const handleSample = () => { setInput(SAMPLE_INPUT); convert(SAMPLE_INPUT); };
+  const handleClear = () => { setInput(''); setOutput(''); setStatus(null); setConvTime(null); };
+  const handleSwap = () => { setSrcFmt(dstFmt); setDstFmt(srcFmt); handleClear(); };
+  const handleCopy = () => {
+    navigator.clipboard.writeText(output).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),1800);});
+  };
+  const handleDownload = () => {
+    const ext = dstFmt.toLowerCase();
+    const blob = new Blob([output], {type:'text/plain'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `output.${ext}`; a.click();
+  };
+
+  const bytes = new TextEncoder().encode(input).length;
+  const lines = input ? input.split('\n').length : 0;
+
+  const RELATED = ALL_PAIRS.filter(p=>p.from===srcFmt||p.to===dstFmt).filter(p=>!(p.from===srcFmt&&p.to===dstFmt)).slice(0,6);
+
+  return (
+    <div style={{minHeight:'100vh'}}>
+      {/* Breadcrumb */}
+      <div style={{maxWidth:1100,margin:'0 auto',padding:'16px 20px 0',display:'flex',alignItems:'center',gap:6,fontSize:12,color:'var(--text-muted)'}}>
+        <button onClick={()=>onNav('hub')} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',fontSize:12,padding:0}}>All Tools</button>
+        <Icon name="ChevronRight" size={13}/>
+        <span style={{color:'var(--text)'}}>{srcFmt} to {dstFmt}</span>
+      </div>
+
+      {/* H1 */}
+      <div style={{maxWidth:1100,margin:'0 auto',padding:'20px 20px 24px'}}>
+        <h1 style={{fontSize:'clamp(22px,3vw,34px)',fontWeight:600,letterSpacing:'-0.02em',margin:'0 0 6px',color:'var(--text)'}}>
+          {srcFmt} to {dstFmt} Converter
+        </h1>
+        <p style={{margin:0,fontSize:14,color:'var(--text-muted)'}}>
+          Convert {srcFmt} to {dstFmt} instantly. Free, private, no sign-up required.
+        </p>
+      </div>
+
+      {/* THE TOOL */}
+      <div style={{maxWidth:1100,margin:'0 auto',padding:'0 20px'}}>
+        <div style={{display:'flex',gap:10,alignItems:'stretch',minHeight:340,flexWrap:'wrap'}}>
+          {/* Input pane */}
+          <div style={{flex:1,minWidth:260,display:'flex',flexDirection:'column'}}>
+            <CodePane
+              label={srcFmt}
+              value={input}
+              onChange={handleInput}
+              placeholder={`Paste your ${srcFmt} here...`}
+            >
+              <button className="btn" onClick={handleSample}><Icon name="FileText" size={13}/>Sample</button>
+              <label className="btn" style={{cursor:'pointer'}}>
+                <Icon name="Upload" size={13}/>Upload
+                <input type="file" style={{display:'none'}} onChange={e=>{
+                  const f=e.target.files[0]; if(!f) return;
+                  const r=new FileReader(); r.onload=ev=>{setInput(ev.target.result);convert(ev.target.result);};r.readAsText(f);
+                }}/>
+              </label>
+              <button className="btn" onClick={handleClear}><Icon name="X" size={13}/>Clear</button>
+            </CodePane>
+          </div>
+
+          {/* Swap button */}
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,padding:'0 2px'}}>
+            <button className="btn" onClick={handleSwap} style={{flexDirection:'column',padding:'10px 8px',gap:4}}>
+              <Icon name="ArrowLeftRight" size={15}/>
+              <span style={{fontSize:10,letterSpacing:'0.06em'}}>SWAP</span>
+            </button>
+          </div>
+
+          {/* Output pane */}
+          <div style={{flex:1,minWidth:260,display:'flex',flexDirection:'column'}}>
+            <CodePane
+              label={dstFmt}
+              value={output}
+              onChange={()=>{}}
+              readOnly
+              placeholder={`${dstFmt} output will appear here...`}
+            >
+              <div style={{display:'flex',alignItems:'center',gap:6,marginRight:8}}>
+                <span style={{fontSize:11,color:'var(--text-faint)'}}>Indent:</span>
+                <select value={indent} onChange={e=>setIndent(e.target.value)}
+                  style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:4,padding:'2px 6px',fontSize:12,color:'var(--text)',outline:'none'}}>
+                  <option value="2">2</option>
+                  <option value="4">4</option>
+                  <option value="tab">Tab</option>
+                </select>
+              </div>
+              <button className="btn" onClick={handleCopy} disabled={!output}>
+                {copied ? <Icon name="Check" size={13}/> : <Icon name="Copy" size={13}/>}
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+              <button className="btn" onClick={handleDownload} disabled={!output}>
+                <Icon name="Download" size={13}/>Download
+              </button>
+            </CodePane>
+          </div>
+        </div>
+
+        {/* Status strip */}
+        <div className="status-strip" style={{borderRadius:'0 0 8px 8px',marginTop:-1}}>
+          {status ? (
+            <span className={status.ok?'status-ok':''}style={status.ok?{}:{color:'#f87171',fontWeight:600}}>{status.msg}</span>
+          ) : <span style={{color:'var(--text-faint)'}}>Awaiting input…</span>}
+          <div className="sep"/>
+          <span>{bytes > 0 ? `${bytes} B` : '0 B'}</span>
+          <span>{lines > 0 ? `${lines} lines` : '—'}</span>
+          {convTime && <><div className="sep"/><span><Icon name="Zap" size={10} style={{display:'inline',marginRight:3}}/>{convTime} ms</span></>}
+          <div style={{flex:1}}/>
+          <div className="trust-badge">
+            <Icon name="Shield" size={13} style={{color:'var(--accent)'}}/>
+            Runs entirely in your browser. Your data never leaves your device.
+          </div>
+        </div>
+      </div>
+
+      {/* Ad slot */}
+      <div style={{maxWidth:1100,margin:'36px auto 0',padding:'0 20px'}}>
+        <div style={{textAlign:'center'}}>
+          <div className="ad-label" style={{marginBottom:6}}>Advertisement</div>
+          <div className="ad-slot" style={{width:'100%',maxWidth:728,height:90,margin:'0 auto'}}>
+            <span style={{fontSize:11,color:'var(--text-faint)'}}>728 × 90</span>
+          </div>
+        </div>
+      </div>
+
+      {/* SEO Content */}
+      <div style={{maxWidth:800,margin:'0 auto',padding:'64px 20px 0'}}>
+
+        {/* How it works */}
+        <div style={{marginBottom:64}}>
+          <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.015em',margin:'0 0 32px',color:'var(--text)'}}>How it works</h2>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:24}}>
+            {[
+              {n:1,icon:'ClipboardPaste',title:'Paste or upload',desc:`Drop your ${srcFmt} into the left pane — paste directly or upload a file from your disk.`},
+              {n:2,icon:'Zap',title:'Instant conversion',desc:`Our parser validates and converts your ${srcFmt} to ${dstFmt} in milliseconds, entirely client-side.`},
+              {n:3,icon:'Download',title:'Copy or download',desc:`Grab the output with one click. Download as a file or copy straight to your clipboard.`},
+            ].map(s=>(
+              <div key={s.n} style={{display:'flex',gap:16,alignItems:'flex-start'}}>
+                <div style={{width:36,height:36,borderRadius:8,background:'var(--accent-dim)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <Icon name={s.icon} size={16} style={{color:'var(--accent)'}}/>
+                </div>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,marginBottom:4,color:'var(--text)'}}>{s.n}. {s.title}</div>
+                  <div style={{fontSize:13,color:'var(--text-muted)',lineHeight:1.65}}>{s.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* About section */}
+        <div style={{marginBottom:64}}>
+          <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.015em',margin:'0 0 20px',color:'var(--text)'}}>About {srcFmt} to {dstFmt} conversion</h2>
+          <div style={{fontSize:14,color:'var(--text-muted)',lineHeight:1.8,display:'flex',flexDirection:'column',gap:16}}>
+            <p style={{margin:0}}>JSON (JavaScript Object Notation) is the de facto standard for data interchange in web APIs and configuration files. Its strict syntax — double-quoted keys, no trailing commas, no comments — makes it unambiguous and easy to parse across every programming language. However, for human-edited configuration, its verbosity can be a friction point.</p>
+            <p style={{margin:0}}>YAML (YAML Ain't Markup Language) solves exactly this problem. It uses indentation instead of brackets and quotes, supports inline comments, and allows multi-line strings without escape sequences. This makes it the format of choice for Kubernetes manifests, GitHub Actions workflows, Ansible playbooks, and Docker Compose files.</p>
+            <p style={{margin:0}}>Every valid JSON document is technically valid YAML 1.2, which means conversion is lossless in one direction. Going from YAML to JSON strips comments and resolves anchors, but all data values — strings, numbers, booleans, arrays, and nested objects — survive the round-trip intact.</p>
+          </div>
+        </div>
+
+        {/* Use cases */}
+        <div style={{marginBottom:64}}>
+          <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.015em',margin:'0 0 24px',color:'var(--text)'}}>Common use cases</h2>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12}}>
+            {USE_CASES.map(u=>(
+              <div key={u.title} className="card" style={{padding:'18px 20px'}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+                  <Icon name={u.icon} size={15} style={{color:'var(--accent)'}}/>
+                  <div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{u.title}</div>
+                </div>
+                <div style={{fontSize:13,color:'var(--text-muted)',lineHeight:1.65}}>{u.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Comparison table */}
+        <div style={{marginBottom:64}}>
+          <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.015em',margin:'0 0 24px',color:'var(--text)'}}>{srcFmt} vs {dstFmt}</h2>
+          <div className="card" style={{overflow:'hidden'}}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th><FmtTag fmt={srcFmt}/></th>
+                  <th><FmtTag fmt={dstFmt}/></th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE_ROWS.map(r=>(
+                  <tr key={r.feature}>
+                    <td>{r.feature}</td>
+                    <td>{r.json}</td>
+                    <td>{r.yaml}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* FAQ */}
+        <div style={{marginBottom:64}}>
+          <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.015em',margin:'0 0 8px',color:'var(--text)'}}>Frequently asked questions</h2>
+          <div>
+            {FAQ_ITEMS.map((f,i)=>(
+              <div key={i} className="faq-item">
+                <button className="faq-btn" onClick={()=>setOpenFaq(openFaq===i?null:i)}>
+                  <span>{f.q}</span>
+                  <Icon name={openFaq===i?'ChevronUp':'ChevronDown'} size={16} style={{color:'var(--text-muted)',flexShrink:0}}/>
+                </button>
+                {openFaq===i && <div className="faq-body">{f.a}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Related converters */}
+        <div style={{marginBottom:16}}>
+          <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.015em',margin:'0 0 24px',color:'var(--text)'}}>Related converters</h2>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:8}}>
+            {RELATED.map(p=>(
+              <ConverterCard key={`${p.from}-${p.to}`} {...p} onClick={()=>onNav('converter',p)}/>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  const [view, setView] = useState('hub');
+  const [converterPair, setConverterPair] = useState({from:'JSON',to:'YAML'});
+  const [dark, setDark] = useState(true);
+
+  useEffect(()=>{
+    document.documentElement.classList.toggle('dark', dark);
+  },[dark]);
+
+  const handleNav = (target, pair) => {
+    if (target==='hub') setView('hub');
+    if (target==='converter') { if(pair) setConverterPair(pair); setView('converter'); }
+  };
+
+  return (
+    <>
+      {/* Prototype view toggle */}
+      <div className="view-toggle">
+        <span style={{marginRight:8,fontWeight:600,fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',opacity:0.5}}>Preview:</span>
+        <button className={`view-btn${view==='hub'?' active':''}`} onClick={()=>setView('hub')}>Hub Page</button>
+        <button className={`view-btn${view==='converter'?' active':''}`} onClick={()=>setView('converter')}>Converter Page</button>
+        <span style={{marginLeft:'auto',fontSize:11,opacity:0.4}}>Click any converter card to navigate</span>
+      </div>
+
+      <Nav dark={dark} setDark={setDark} onNav={handleNav}/>
+
+      {view==='hub' ? (
+        <HubPage onNav={handleNav}/>
+      ) : (
+        <ConverterPage key={`${converterPair.from}-${converterPair.to}`} from={converterPair.from} to={converterPair.to} onNav={handleNav}/>
+      )}
+
+      <Footer/>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
