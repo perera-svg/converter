@@ -3,12 +3,9 @@
 import { useRouter } from "next/navigation";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
+import { dispatch } from "../_lib/converters/index";
 import type { Format } from "../_lib/formats";
-import {
-  pairHref,
-  SAMPLE_INPUT,
-  SAMPLE_OUTPUT,
-} from "../_lib/formats";
+import { pairHref, SAMPLE_INPUT } from "../_lib/formats";
 import { CodePane } from "./CodePane";
 import { Icon } from "./Icon";
 
@@ -33,19 +30,16 @@ export function Converter({ from, to }: { from: Format; to: Format }) {
     const t0 =
       typeof performance !== "undefined" ? performance.now() : Date.now();
     try {
-      // Mock conversion — validates JSON when source is JSON, otherwise accepts as-is.
-      if (from === "JSON") JSON.parse(val);
-      setOutput(SAMPLE_OUTPUT);
+      const indentVal = indent === "tab" ? "\t" : Number(indent);
+      const result = dispatch(from, to, val, { indent: indentVal });
+      setOutput(result);
       setStatus({ ok: true, msg: `✓ Valid ${from}` });
     } catch (e) {
-      const message = e instanceof Error ? e.message.split("\n")[0] : "parse error";
-      if (from !== "JSON") {
-        setOutput(SAMPLE_OUTPUT);
-        setStatus({ ok: true, msg: `✓ Valid ${from}` });
-      } else {
-        setOutput("");
-        setStatus({ ok: false, msg: `✗ Invalid JSON: ${message}` });
-      }
+      setOutput("");
+      setStatus({
+        ok: false,
+        msg: `✗ ${e instanceof Error ? e.message.split("\n")[0] : "parse error"}`,
+      });
     }
     const t1 =
       typeof performance !== "undefined" ? performance.now() : Date.now();
