@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:api.anthropic.com)",
-      "Bash(pnpm exec *)"
+      "Bash(pnpm exec *)",
+      "Bash(git *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm test *)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(node_modules/.bin/vitest run *)",
+      "Bash(echo \"EXIT_CODE:$?\")",
+      "Bash(python3 *)",
+      "Bash(node *)",
+      "Bash(pnpm biome *)"
     ]
+  },
+  "enabledPlugins": {
+    "code-simplifier@claude-plugins-official": true
   }
 }
