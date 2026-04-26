@@ -52,7 +52,9 @@ body {
   color: var(--text);
   font-family: var(--font-inter), system-ui, sans-serif;
   margin: 0;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 ::-webkit-scrollbar {
@@ -78,7 +80,9 @@ a {
   border-radius: 8px;
 }
 .card-hover {
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
   cursor: pointer;
 }
 .card-hover:hover {
@@ -128,22 +132,6 @@ a {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-.code-textarea {
-  flex: 1;
-  resize: none;
-  outline: none;
-  border: none;
-  background: transparent;
-  color: var(--text);
-  padding: 14px 16px;
-  font-family: var(--font-jetbrains-mono), monospace;
-  font-size: 13px;
-  line-height: 1.65;
-  min-height: 0;
-}
-.code-textarea::placeholder {
-  color: var(--text-faint);
 }
 
 .pane-toolbar {
