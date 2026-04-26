@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { ChangeEvent } from "react";
 import { useEffect, useState } from "react";
 import { dispatch } from "../_lib/converters/index";
 import type { Format } from "../_lib/formats";
@@ -47,9 +46,9 @@ export function Converter({ from, to }: { from: Format; to: Format }) {
     }
   };
 
-  const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    convert(e.target.value);
+  const handleInput = (value: string) => {
+    setInput(value);
+    convert(value);
   };
   const handleSample = () => {
     setInput(SAMPLE_INPUT);
@@ -111,6 +110,7 @@ export function Converter({ from, to }: { from: Format; to: Format }) {
         >
           <CodePane
             label={from}
+            format={from}
             value={input}
             onChange={handleInput}
             placeholder={`Paste your ${from} here...`}
@@ -177,6 +177,7 @@ export function Converter({ from, to }: { from: Format; to: Format }) {
         >
           <CodePane
             label={to}
+            format={to}
             value={output}
             readOnly
             placeholder={`${to} output will appear here...`}
