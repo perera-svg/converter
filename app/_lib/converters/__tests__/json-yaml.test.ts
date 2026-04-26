@@ -38,6 +38,6 @@ describe("json-yaml convert", () => {
   });
 
   it("throws on empty input after trim", () => {
-    expect(() => convert("   ", { indent: 2 })).toThrow();
+    expect(() => convert("   ", { indent: 2 })).toThrow(Error);
   });
 });
