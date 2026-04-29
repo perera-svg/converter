@@ -1,20 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:api.anthropic.com)",
-      "Bash(pnpm exec *)",
-      "Bash(git *)",
-      "Bash(pnpm add *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git check-ignore *)",
+      "Bash(git worktree *)",
+      "Bash(pnpm install *)",
       "Bash(pnpm test *)",
-      "Bash(echo \"Exit code: $?\")",
-      "Bash(node_modules/.bin/vitest run *)",
-      "Bash(echo \"EXIT_CODE:$?\")",
-      "Bash(python3 *)",
-      "Bash(node *)",
-      "Bash(pnpm biome *)"
+      "Bash(git -C .claude/worktrees/json-toml add docs/plans/2026-04-26-json-toml-implementation.md)",
+      "Bash(git -C .claude/worktrees/json-toml commit -m \"docs: add JSON↔TOML implementation plan\")"
     ]
-  },
-  "enabledPlugins": {
-    "code-simplifier@claude-plugins-official": true
   }
 }
