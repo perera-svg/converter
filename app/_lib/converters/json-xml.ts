@@ -1,7 +1,7 @@
 import { XMLBuilder } from "fast-xml-parser";
 import type { ConvertOptions } from "./types";
 
-const XML_NAME_RE = /^[A-Za-z_][A-Za-z0-9._-]*$/;
+const XML_NAME_RE = /^(?!xml)[A-Za-z_][A-Za-z0-9._-]*$/i;
 
 function validateKeys(node: unknown): void {
   if (node === null || typeof node !== "object") return;

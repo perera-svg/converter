@@ -96,6 +96,12 @@ describe("json-xml convert", () => {
     );
   });
 
+  it("rejects a key starting with xml (XML reserved prefix)", () => {
+    expect(() => convert('{"xmlFoo":"bar"}', { indent: 2 })).toThrow(
+      'Invalid XML element name in JSON key: "xmlFoo"',
+    );
+  });
+
   it("rejects an invalid key nested inside an array of objects", () => {
     expect(() =>
       convert(JSON.stringify({ items: [{ "bad key": 1 }] }), { indent: 2 }),
