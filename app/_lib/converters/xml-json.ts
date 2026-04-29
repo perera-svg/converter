@@ -12,11 +12,16 @@ export function convert(input: string, options: ConvertOptions): string {
   });
 
   const parsed = parser.parse(input) as Record<string, unknown>;
-
-  // Unwrap the single top-level element to keep round-trips clean.
-  // Any valid XML has exactly one root element, so keys.length === 1
-  // is the normal path. The else branch is a defensive fallback.
   const keys = Object.keys(parsed);
+
+  if (keys.length === 0) {
+    throw new Error("Input does not contain valid XML");
+  }
+
+  // With ignoreDeclaration: true, valid XML always produces exactly one key
+  // (the root element). keys.length === 0 means the parser accepted non-XML
+  // text silently — we catch that above. The else branch handles any other
+  // edge case defensively.
   const data = keys.length === 1 ? parsed[keys[0]] : parsed;
 
   const indent = options.indent === "\t" ? "\t" : Number(options.indent);

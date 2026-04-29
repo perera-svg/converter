@@ -89,6 +89,12 @@ describe("xml-json convert", () => {
     expect(() => convert("<", { indent: 2 })).toThrow();
   });
 
+  it("throws on plain text input (not XML)", () => {
+    expect(() => convert("hello world", { indent: 2 })).toThrow(
+      "Input does not contain valid XML",
+    );
+  });
+
   it("throws on whitespace-only input", () => {
     expect(() => convert("   ", { indent: 2 })).toThrow("Input is empty");
   });
