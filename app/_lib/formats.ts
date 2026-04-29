@@ -130,7 +130,9 @@ export function pairHref(from: Format, to: Format): string {
   return `/${from.toLowerCase()}/${to.toLowerCase()}`;
 }
 
-export const IMPLEMENTED_PAIRS = new Set([
+type PairKey = `${Format}→${Format}`;
+
+export const IMPLEMENTED_PAIRS = new Set<PairKey>([
   "JSON→YAML",
   "YAML→JSON",
   "JSON→XML",
@@ -140,5 +142,5 @@ export const IMPLEMENTED_PAIRS = new Set([
 ]);
 
 export function isPairImplemented(from: Format, to: Format): boolean {
-  return IMPLEMENTED_PAIRS.has(`${from}→${to}`);
+  return IMPLEMENTED_PAIRS.has(`${from}→${to}` as PairKey);
 }
