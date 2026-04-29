@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ALL_PAIRS, FORMATS, POPULAR } from "../_lib/formats";
+import { ALL_PAIRS, FORMATS, POPULAR, isPairImplemented } from "../_lib/formats";
 import { ConverterCard } from "./ConverterCard";
 import { Icon } from "./Icon";
 
@@ -68,6 +68,7 @@ export function HubGrid() {
                   key={`${p.from}-${p.to}`}
                   from={p.from}
                   to={p.to}
+                  comingSoon={!isPairImplemented(p.from, p.to)}
                 />
               ))}
             </div>
@@ -101,6 +102,7 @@ export function HubGrid() {
                     key={`${p.from}-${p.to}`}
                     from={p.from}
                     to={p.to}
+                    comingSoon={!isPairImplemented(p.from, p.to)}
                   />
                 ))}
               </div>
