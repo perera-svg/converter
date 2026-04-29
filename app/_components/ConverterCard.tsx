@@ -63,15 +63,20 @@ export function ConverterCard({
 
   if (comingSoon) {
     return (
-      <div
-        className="card"
-        style={{
-          ...sharedStyle,
-          opacity: 0.55,
-          cursor: "not-allowed",
-        }}
-      >
-        {inner}
+      <div style={{ cursor: "not-allowed" }}>
+        <div
+          className="card"
+          role="link"
+          aria-disabled="true"
+          tabIndex={-1}
+          style={{
+            ...sharedStyle,
+            opacity: 0.55,
+            pointerEvents: "none",
+          }}
+        >
+          {inner}
+        </div>
       </div>
     );
   }
