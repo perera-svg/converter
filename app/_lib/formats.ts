@@ -129,3 +129,16 @@ export function isFormat(value: string): value is Format {
 export function pairHref(from: Format, to: Format): string {
   return `/${from.toLowerCase()}/${to.toLowerCase()}`;
 }
+
+export const IMPLEMENTED_PAIRS = new Set([
+  "JSON→YAML",
+  "YAML→JSON",
+  "JSON→XML",
+  "XML→JSON",
+  "JSON→CSV",
+  "CSV→JSON",
+]);
+
+export function isPairImplemented(from: Format, to: Format): boolean {
+  return IMPLEMENTED_PAIRS.has(`${from}→${to}`);
+}
