@@ -13,8 +13,19 @@ describe("dispatch", () => {
   });
 
   it("throws for unsupported pair", () => {
-    expect(() => dispatch("JSON", "TOML", "{}", { indent: 2 })).toThrow(
-      "Unsupported conversion: JSON→TOML"
+    expect(() => dispatch("XML", "CSV", "<a/>", { indent: 2 })).toThrow(
+      "Unsupported conversion: XML→CSV"
     );
+  });
+
+  it("routes JSON→CSV", () => {
+    const input = JSON.stringify([{ a: "1", b: "2" }]);
+    const result = dispatch("JSON", "CSV", input, { indent: 2 });
+    expect(result).toBe("a,b\n1,2");
+  });
+
+  it("routes CSV→JSON", () => {
+    const result = dispatch("CSV", "JSON", "a,b\n1,2", { indent: 2 });
+    expect(JSON.parse(result)).toEqual([{ a: "1", b: "2" }]);
   });
 });

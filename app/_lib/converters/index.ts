@@ -2,12 +2,16 @@ import type { Format } from "../formats";
 import type { ConvertOptions } from "./types";
 import { convert as jsonToYaml } from "./json-yaml";
 import { convert as yamlToJson } from "./yaml-json";
+import { convert as jsonToCsv } from "./json-csv";
+import { convert as csvToJson } from "./csv-json";
 
 type ConverterFn = (input: string, options: ConvertOptions) => string;
 
 const converters: Partial<Record<string, ConverterFn>> = {
   "JSON→YAML": jsonToYaml,
   "YAML→JSON": yamlToJson,
+  "JSON→CSV": jsonToCsv,
+  "CSV→JSON": csvToJson,
 };
 
 export function dispatch(
