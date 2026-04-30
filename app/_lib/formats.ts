@@ -135,6 +135,8 @@ type PairKey = `${Format}→${Format}`;
 export const IMPLEMENTED_PAIRS = new Set<PairKey>([
   "JSON→YAML",
   "YAML→JSON",
+  "JSON→TOML",
+  "TOML→JSON",
   "JSON→XML",
   "XML→JSON",
   "JSON→CSV",
