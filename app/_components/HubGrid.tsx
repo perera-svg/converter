@@ -60,7 +60,8 @@ export function HubGrid() {
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))",
-                gap: 8,
+                columnGap: 8,
+                rowGap: 20,
               }}
             >
               {POPULAR.map((p) => (
@@ -94,7 +95,8 @@ export function HubGrid() {
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))",
-                  gap: 8,
+                  columnGap: 8,
+                rowGap: 20,
                 }}
               >
                 {g.pairs.map((p) => (

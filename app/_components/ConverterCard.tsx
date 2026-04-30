@@ -29,11 +29,11 @@ export function ConverterCard({
           <span
             style={{
               marginLeft: "auto",
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: 600,
-              letterSpacing: "0.04em",
+              letterSpacing: "0.05em",
               textTransform: "uppercase",
-              padding: "2px 7px",
+              padding: "2px 6px",
               borderRadius: 99,
               background: "var(--surface-2)",
               color: "var(--text-faint)",
@@ -41,7 +41,7 @@ export function ConverterCard({
               flexShrink: 0,
             }}
           >
-            Coming Soon
+            Soon
           </span>
         ) : (
           <Icon
@@ -59,24 +59,45 @@ export function ConverterCard({
     display: "flex",
     alignItems: "center",
     gap: 8,
+    overflow: "hidden",
   };
 
   if (comingSoon) {
     return (
-      <div style={{ cursor: "not-allowed" }}>
+      <div style={{ cursor: "not-allowed", position: "relative" }}>
         <div
           className="card"
           role="link"
           aria-disabled="true"
           tabIndex={-1}
-          style={{
-            ...sharedStyle,
-            opacity: 0.55,
-            pointerEvents: "none",
-          }}
+          style={{ ...sharedStyle, opacity: 0.5, pointerEvents: "none" }}
         >
-          {inner}
+          <FmtTag fmt={from} />
+          <Icon name="ArrowRight" size={13} style={{ color: "var(--text-faint)", flexShrink: 0 }} />
+          <FmtTag fmt={to} />
         </div>
+        {!small && (
+          <span
+            style={{
+              position: "absolute",
+              top: -8,
+              right: -6,
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+              padding: "2px 6px",
+              borderRadius: 99,
+              background: "#1f2937",
+              color: "#fff",
+              whiteSpace: "nowrap",
+              lineHeight: 1.6,
+              pointerEvents: "none",
+            }}
+          >
+            Soon
+          </span>
+        )}
       </div>
     );
   }
