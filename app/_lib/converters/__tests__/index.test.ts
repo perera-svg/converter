@@ -28,6 +28,16 @@ describe("dispatch", () => {
     expect(JSON.parse(result)).toEqual({ a: 1 });
   });
 
+  it("routes JSON→TOML", () => {
+    const result = dispatch("JSON", "TOML", JSON.stringify({ a: 1 }), { indent: 2 });
+    expect(result).toContain("a = 1");
+  });
+
+  it("routes TOML→JSON", () => {
+    const result = dispatch("TOML", "JSON", "a = 1\n", { indent: 2 });
+    expect(JSON.parse(result)).toEqual({ a: 1 });
+  });
+
   it("throws for unsupported pair", () => {
     expect(() => dispatch("XML", "CSV", "<a/>", { indent: 2 })).toThrow(
       "Unsupported conversion: XML→CSV",
